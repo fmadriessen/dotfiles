@@ -1,0 +1,36 @@
+"$schema" = "https://starship.rs/config-schema.json"
+
+add_newline = false
+format = """
+$jobs\
+$directory\
+$character"""
+right_format = """$all"""
+
+[character]
+error_symbol = "[%](bold red)"
+success_symbol = "[%](bold green)"
+
+[cmd_duration]
+disabled = true
+
+[directory]
+fish_style_pwd_dir_length = 1
+
+[git_branch]
+format = '[$symbol$branch(:$remote_branch)]($style) '
+symbol = " "
+
+[lua]
+symbol = " "
+
+[python]
+detect_files = [
+    '.python-version',
+    'Pipfile',
+    '__init__.py',
+    'pyproject.toml',
+    'setup.py',
+    'tox.ini',
+]
+symbol = " "

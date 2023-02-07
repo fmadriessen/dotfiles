@@ -1,0 +1,11 @@
+stow
+
+bat
+exa
+ripgrep
+glow
+fzf
+fd
+zoxide
+fish
+starship
