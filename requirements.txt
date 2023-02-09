@@ -9,3 +9,12 @@ fd
 zoxide
 fish
 starship
+
+ttf-jetbrains-mono
+noto-fonts
+noto-fonts-emoji
+noto-fonts-cjk
+nerd-fonts
+ttf-victor-mono-nerd
+
+wl-clipboard
