@@ -22,7 +22,10 @@ local keys = {
    -- Code actions
    { "<localleader>ca", vim.lsp.buf.code_action, desc = "Execute code action", has = "codeActionProvider", mode = { "n", "v" } },
    { "<localleader>cr", vim.lsp.buf.rename, desc = "Rename symbol", has = "renameProvider" },
-   { "<localleader>cf", vim.lsp.buf.format, desc = "Format document", has = "documentFormattingProvider" },
+   { "<localleader>cf", require("plugins.lsp.format").format, desc = "Format document", has = "documentFormattingProvider" },
+   { "<localleader>cf", require("plugins.lsp.format").format, desc = "Format document", has = "documentRangeFormattingProvider", mode = "v" },
+
+   { "<localleader>tf", require("plugins.lsp.format").toggle_autoformat, desc = "Toggle formatting on save", has = "documentFormattingProvider" },
 }
 
 ---@param client LspClient

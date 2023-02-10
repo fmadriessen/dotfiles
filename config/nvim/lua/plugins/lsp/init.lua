@@ -9,6 +9,8 @@ return {
          { "folke/neodev.nvim", opts = { experimental = { pathStrict = true } } },
       },
       opts = {
+         autoformat = true,
+         format_opts = {},
          servers = {
             ["sumneko_lua"] = {
                settings = {
@@ -28,6 +30,7 @@ return {
                local client = vim.lsp.get_client_by_id(args.data.client_id)
 
                require("plugins.lsp.keymaps").on_attach(client, buffer)
+               require("plugins.lsp.format").on_attach(client, buffer)
             end,
          })
 
