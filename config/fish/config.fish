@@ -9,6 +9,9 @@ set -gx MANPAGER "nvim +Man!"
 
 set -gx ZK_NOTEBOOK_DIR $HOME/doc/notes
 
+set -gx CARGO_HOME $XDG_DATA_HOME/cargo
+set -gx RUSTUP_HOME $XDG_DATA_HOME/rustup
+
 fish_add_path $HOME/.local/bin
 
 if status is-interactive
