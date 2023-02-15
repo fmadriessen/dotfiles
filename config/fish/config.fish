@@ -26,4 +26,5 @@ if status is-interactive
 
     command zoxide init fish | source
     command starship init fish | source
+    _shell_integration
 end
