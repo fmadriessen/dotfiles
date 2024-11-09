@@ -19,14 +19,14 @@ vim.api.nvim_create_autocmd("TextYankPost", {
    callback = function() vim.highlight.on_yank() end,
 })
 
-local package_path = vim.fn.stdpath("data") .. "/site/"
-local deps_path = package_path .. "pack/deps/start/mini.deps"
+vim.env.VIMPLUGINDIR = vim.fn.stdpath("data") .. "/site/pack/deps"
+local deps_path = vim.env.VIMPLUGINDIR .. "/start/mini.deps"
 if not vim.uv.fs_stat(deps_path) then
    vim.fn.system({ "git", "clone", "--filter=blob:none", "https://github.com/echasnovski/mini.nvim", deps_path })
    vim.cmd("packadd mini.deps | helptags ALL")
 end
 
-require("mini.deps").setup({ path = { package = package_path } })
+require("mini.deps").setup({ path = { package = vim.fn.stdpath("data") .. "/site/" } })
 
 MiniDeps.add({
    source = "nvim-treesitter/nvim-treesitter",
@@ -41,6 +41,7 @@ require("nvim-treesitter").setup({
       "bash",
       "editorconfig",
       "fish",
+      "json",
       "latex",
       "lua",
       "luadoc",
@@ -63,3 +64,53 @@ vim.api.nvim_create_autocmd("FileType", {
       end
    end,
 })
+
+local augroup_filetype_config = vim.api.nvim_create_augroup("UserFileTypeConfiguration", { clear = true })
+vim.api.nvim_create_autocmd("FileType", {
+   pattern = "lua",
+   group = augroup_filetype_config,
+   callback = function(event)
+      vim.lsp.start({
+         name = "lua-language-server",
+         cmd = { "lua-language-server" },
+         root_dir = vim.fs.root(event.buf, { ".luarc.json", ".luarc.jsonc", ".stylua.toml", "stylua.toml", ".git" }),
+         settings = {
+            Lua = {
+               completion = { callSnippet = "Replace" },
+            },
+         },
+         telemetry = { enable = false },
+         single_file_support = true,
+      })
+   end,
+})
+
+vim.api.nvim_create_autocmd("LspAttach", {
+   callback = function(event)
+      local client = vim.lsp.get_client_by_id(event.data.client_id)
+      if not client then return end
+
+      if client.supports_method("textDocument/completion") then
+         vim.lsp.completion.enable(true, client.id, event.buf, { autotrigger = true })
+
+         vim.keymap.set("i", "<C-n>", function()
+            if vim.fn.pumvisible() == 0 then return "<C-x><C-o>" end
+
+            return "<C-n>"
+         end, { expr = true })
+      end
+   end,
+})
+
+vim.keymap.set({ "i", "s" }, "<C-j>", function()
+   if vim.snippet.active({ direction = 1 }) then return vim.snippet.jump(1) end
+end, { expr = true })
+
+vim.keymap.set({ "i", "s" }, "<C-k>", function()
+   if vim.snippet.active({ direction = -1 }) then return vim.snippet.jump(-1) end
+end, { expr = true })
+
+vim.keymap.set({ "i", "s" }, "<ESC>", function()
+   vim.snippet.stop()
+   return "<ESC>"
+end, { expr = true })
