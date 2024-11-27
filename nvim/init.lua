@@ -51,6 +51,27 @@ require("nvim-treesitter").setup({
    },
 })
 
+MiniDeps.add({ source = "nvim-treesitter/nvim-treesitter-context" })
+MiniDeps.add({ source = "nvim-treesitter/nvim-treesitter-textobjects", checkout = "main" })
+
+local function textobject_select(capture_group)
+   require("nvim-treesitter-textobjects.select").select_textobject(capture_group, "textobjects")
+end
+
+local function textobject_swap(direction, capture_group)
+   require("nvim-treesitter-textobjects.swap")["swap_" .. direction](capture_group)
+end
+
+require("nvim-treesitter-textobjects").setup()
+
+vim.keymap.set({ "x", "o" }, "af", function() textobject_select("@function.outer") end)
+vim.keymap.set({ "x", "o" }, "if", function() textobject_select("@function.inner") end)
+vim.keymap.set({ "x", "o" }, "ia", function() textobject_select("@parameter.inner") end)
+vim.keymap.set({ "x", "o" }, "aa", function() textobject_select("@parameter.outer") end)
+
+vim.keymap.set("n", ">a", function() textobject_swap("next", "@parameter.inner") end)
+vim.keymap.set("n", "<a", function() textobject_swap("previous", "@parameter.inner") end)
+
 vim.api.nvim_create_autocmd("FileType", {
    callback = function(event)
       local filetype = event.match
