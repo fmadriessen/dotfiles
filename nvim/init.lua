@@ -56,7 +56,7 @@ vim.api.nvim_create_autocmd("FileType", {
       local filetype = event.match
       if not filetype then return end
 
-      if vim.treesitter.query.get(filetype, "highlights") then vim.treesitter.start(event.buffer, filetype) end
+      if vim.treesitter.query.get(filetype, "highlights") then vim.treesitter.start(event.buf, filetype) end
 
       if vim.treesitter.query.get(filetype, "folds") then
          vim.opt_local.foldexpr = "v:lua.vim.treesitter.foldexpr()"
@@ -90,7 +90,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
       local client = vim.lsp.get_client_by_id(event.data.client_id)
       if not client then return end
 
-      if client.supports_method("textDocument/completion") then
+      if client:supports_method("textDocument/completion") then
          vim.lsp.completion.enable(true, client.id, event.buf, { autotrigger = true })
 
          vim.keymap.set("i", "<C-n>", function()
@@ -114,3 +114,20 @@ vim.keymap.set({ "i", "s" }, "<ESC>", function()
    vim.snippet.stop()
    return "<ESC>"
 end, { expr = true })
+
+MiniDeps.add("rebelot/kanagawa.nvim")
+require("kanagawa").setup({
+   background = {
+      dark = "dragon",
+   },
+   colors = {
+      theme = {
+         all = {
+            ui = {
+               bg_gutter = "none",
+            },
+         },
+      },
+   },
+})
+vim.cmd.colorscheme("kanagawa")
