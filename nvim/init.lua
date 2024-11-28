@@ -136,6 +136,10 @@ vim.keymap.set({ "i", "s" }, "<ESC>", function()
    return "<ESC>"
 end, { expr = true })
 
+MiniDeps.add("ibhagwan/fzf-lua")
+vim.keymap.set("n", "<C-p>", function() require("fzf-lua").files() end, { desc = "Find files" })
+vim.keymap.set("n", "<leader>b", function() require("fzf-lua").buffers() end, { desc = "Show buffers" })
+
 MiniDeps.add("rebelot/kanagawa.nvim")
 require("kanagawa").setup({
    background = {
