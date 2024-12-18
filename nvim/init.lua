@@ -44,6 +44,7 @@ MiniDeps.add({
       post_install = require("plugin").build({ "cargo", "build", "--release" }),
    },
 })
+MiniDeps.add("stevearc/conform.nvim")
 
 require("kanagawa").setup({
    background = {
@@ -98,6 +99,33 @@ vim.api.nvim_create_autocmd("FileType", {
    group = vim.api.nvim_create_augroup("TreesitterHighlighting", { clear = true }),
 })
 
+require("conform").setup({
+   formatters_by_ft = {
+      fish = { "fish_indent" },
+      lua = { "stylua", lsp_format = "fallback" },
+      markdown = { "prettier", "injected" },
+      rust = { "rustfmt", lsp_format = "fallback" },
+   },
+   format_on_save = function(buf)
+      -- INFO: https://github.com/stevearc/conform.nvim/blob/master/doc/recipes.md
+      if vim.g.disable_autoformat or vim.b[buf].disable_autoformat then return end
+
+      return { timeout_ms = 500, lsp_format = "fallback" }
+   end,
+})
+
+vim.api.nvim_create_user_command("Format", function(args)
+   local range = nil
+   if args.count ~= -1 then
+      local end_line = vim.api.nvim_buf_get_lines(0, args.line2 - 1, args.line2, true)[1]
+      range = {
+         start = { args.line1, 0 },
+         ["end"] = { args.line2, end_line:len() },
+      }
+   end
+   require("conform").format({ async = true, lsp_format = "fallback", range = range })
+end, { desc = "Format buffer or range", range = true })
+
 local function textobject_select(capture_group)
    return function() require("nvim-treesitter-textobjects.select").select_textobject(capture_group, "textobjects") end
 end
@@ -134,10 +162,19 @@ vim.keymap.set("n", "<C-l>", function()
    vim.cmd.redraw()
 end, { desc = "Close floats and clear search highlights" })
 
+vim.keymap.set("n", "gQ", "<cmd>Format<cr>", { desc = "Format buffer" })
 vim.keymap.set("n", "<C-p>", function() require("fzf-lua").files() end, { desc = "Find files" })
 vim.keymap.set("n", "<leader>b", function() require("fzf-lua").buffers() end, { desc = "Show buffers" })
 
 vim.keymap.set("n", "<leader>d", function() vim.diagnostic.open_float() end, { desc = "Show diagnostics on line" })
+
+vim.keymap.set("n", "<leader>xf", function()
+   vim.g.disable_autoformat = not vim.g.disable_autoformat
+   vim.notify(
+      string.format("%s formatting on save", vim.g.disable_autoformat and "Disabled" or "Enabled"),
+      vim.log.levels.INFO
+   )
+end, { desc = "Toggle formatting on save" })
 
 vim.api.nvim_create_autocmd("TextYankPost", {
    pattern = "*",
@@ -164,6 +201,7 @@ vim.api.nvim_create_autocmd("FileType", {
    end,
 })
 
+local augroup_filetype_config = vim.api.nvim_create_augroup("UserFileTypeConfiguration", { clear = true })
 vim.api.nvim_create_autocmd("FileType", {
    pattern = "markdown",
    group = augroup_filetype_config,
