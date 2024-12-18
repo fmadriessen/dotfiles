@@ -37,7 +37,13 @@ MiniDeps.add({ source = "nvim-treesitter/nvim-treesitter-context" })
 MiniDeps.add({ source = "nvim-treesitter/nvim-treesitter-textobjects", checkout = "main" })
 MiniDeps.add("ibhagwan/fzf-lua")
 MiniDeps.add("rebelot/kanagawa.nvim")
-MiniDeps.add({ source = "saghen/blink.cmp", checkout = "v0.6.2", monitor = "main" })
+MiniDeps.add({
+   source = "saghen/blink.cmp",
+   hooks = {
+      post_checkout = require("plugin").build({ "cargo", "build", "--release" }),
+      post_install = require("plugin").build({ "cargo", "build", "--release" }),
+   },
+})
 
 require("kanagawa").setup({
    background = {
