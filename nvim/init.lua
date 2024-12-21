@@ -175,29 +175,72 @@ vim.keymap.set("n", "<leader>xf", function()
       vim.log.levels.INFO
    )
 end, { desc = "Toggle formatting on save" })
+vim.keymap.set("n", "<leader>xh", function()
+   vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
+   vim.notify(
+      string.format("%s inlay hints", vim.lsp.inlay_hint.is_enabled() and "Enabled" or "Disabled"),
+      vim.log.levels.INFO
+   )
+end, { desc = "Toggle inlay hints" })
 
 vim.api.nvim_create_autocmd("TextYankPost", {
    pattern = "*",
    callback = function() vim.highlight.on_yank() end,
 })
 
-local augroup_filetype_config = vim.api.nvim_create_augroup("UserFileTypeConfiguration", { clear = true })
-vim.api.nvim_create_autocmd("FileType", {
-   pattern = "lua",
-   group = augroup_filetype_config,
-   callback = function(event)
-      vim.lsp.start({
-         name = "lua-language-server",
-         cmd = { "lua-language-server" },
-         root_dir = vim.fs.root(event.buf, { ".luarc.json", ".luarc.jsonc", ".stylua.toml", "stylua.toml", ".git" }),
-         settings = {
-            Lua = {
-               completion = { callSnippet = "Replace" },
-            },
+-- WARN: fields in both a specific configuration and the default are overwritten by the more specific version
+vim.lsp.config["*"] = {
+   capabilities = require("blink.cmp").get_lsp_capabilities({
+      textDocument = { semanticTokens = { multilineTokenSupport = true } },
+   }),
+   root_markers = { ".git" },
+   single_file_support = true,
+}
+
+vim.lsp.config["lua-language-server"] = {
+   cmd = { "lua-language-server" },
+   filetypes = { "lua" },
+   name = "lua-language-server",
+   root_markers = { ".luarc.json", ".luarc.jsonc", ".stylua.toml", "stylua.toml", ".git" },
+   settings = {
+      Lua = {
+         completion = { callSnippet = "Replace" },
+      },
+   },
+   single_file_support = true,
+   telemetry = { enable = false },
+}
+
+vim.lsp.config["rust-analyzer"] = {
+   cmd = { "rustup", "run", "stable", "rust-analyzer" },
+   filetypes = { "rust" },
+   name = "rust-analyzer",
+   root_markers = { "Cargo.toml", ".git" },
+   settings = {
+      ["rust-analyzer"] = {
+         procMacro = { enable = true },
+         check = {
+            command = "clippy",
          },
-         telemetry = { enable = false },
-         single_file_support = true,
-      })
+      },
+   },
+   single_file_support = true,
+}
+
+vim.lsp.enable({ "lua-language-server", "rust-analyzer" }, true)
+
+vim.api.nvim_create_autocmd("LspAttach", {
+   callback = function(event)
+      local client = vim.lsp.get_client_by_id(event.data.client_id)
+      if not client then return end
+
+      -- NOTE: To detect what capabilities are available run the following in a buffer with an attached LSP client :lua
+      -- =vim.lsp.get_clients()[1].server_capabilities
+      -- See also :h lsp-buf
+      if client:supports_method("textDocument/foldingRange") then
+         vim.wo.foldmethod = "expr"
+         vim.wo.foldexpr = "v:lua.vim.lsp.foldexpr()"
+      end
    end,
 })
 
@@ -209,25 +252,5 @@ vim.api.nvim_create_autocmd("FileType", {
       vim.opt_local.conceallevel = 2
       vim.opt_local.shiftwidth = 2
       vim.opt_local.tabstop = 2
-   end,
-})
-
-vim.api.nvim_create_autocmd("FileType", {
-   pattern = "rust",
-   group = augroup_filetype_config,
-   callback = function(event)
-      vim.lsp.start({
-         name = "rust-analyzer",
-         cmd = { "rustup", "run", "stable", "rust-analyzer" },
-         root_dir = vim.fs.root(event.buf, { "Cargo.toml" }),
-         settings = {
-            ["rust-analyzer"] = {
-               procMacro = { enable = true },
-               check = {
-                  command = "clippy",
-               },
-            },
-         },
-      })
    end,
 })
